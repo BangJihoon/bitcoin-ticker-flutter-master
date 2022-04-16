@@ -1,5 +1,9 @@
+import 'dart:io' show Platform;
+
+import 'package:bitcoin_ticker/coin_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class PriceScreen extends StatefulWidget {
   @override
@@ -8,9 +12,52 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'USD';
+  String selectedCoin = 'BTC';
+  String apiKey = 'A62B1D71-0BD7-45FE-9AE4-9043C7CDABFE';
+
+  DropdownButton andriodDropdown() {
+    List<DropdownMenuItem> items = [];
+    for (String s in currenciesList) {
+      items.add(DropdownMenuItem(
+        child: Text(s),
+        value: s,
+      ));
+    }
+    return DropdownButton(
+        value: selectedCurrency,
+        items: items,
+        onChanged: (value) {
+          setState(() {
+            selectedCurrency = value;
+          });
+        });
+  }
+
+  CupertinoPicker iOSPicker() {
+    List<Widget> items = [];
+    for (String s in currenciesList) {
+      items.add(Text(s));
+    }
+    return CupertinoPicker(
+      itemExtent: 32.0,
+      onSelectedItemChanged: (selectedIndex) {
+        print(selectedIndex);
+      },
+      children: items,
+    );
+  }
+
+  void getData() async {
+    var url = Uri.parse(
+        'https://rest.coinapi.io/v1/exchangerate/$selectedCoin/$selectedCurrency?apiKey=$apiKey');
+    var response = await http.post(url);
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+  }
 
   @override
   void initState() {
+    getCoin();
     super.initState();
   }
 
@@ -46,11 +93,11 @@ class _PriceScreenState extends State<PriceScreen> {
             ),
           ),
           Container(
-            height: 150.0,
-            alignment: Alignment.center,
-            padding: EdgeInsets.only(bottom: 30.0),
-            color: Colors.lightBlue,
-          )
+              height: 150.0,
+              alignment: Alignment.center,
+              padding: EdgeInsets.only(bottom: 30.0),
+              color: Colors.lightBlue,
+              child: Platform.isIOS ? iOSPicker() : andriodDropdown()),
         ],
       ),
     );
